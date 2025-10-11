@@ -10,6 +10,7 @@ import {
   UserServiceClient,
 } from 'proto/user.pb';
 import { Request } from 'express';
+import { LoginRequest, TokenRequest } from 'dto/grpc.dto';
 
 @Injectable()
 export class AppService {
@@ -30,14 +31,12 @@ export class AppService {
     return await firstValueFrom(this.userGrpcService.register(req));
   }
 
-  async handleLogin(req: Request) {
-    const body = await this.parse(req);
-    return await lastValueFrom(this.userGrpcService.login(body));
+  async handleLogin(req: LoginRequest) {
+    return await lastValueFrom(this.userGrpcService.login(req));
   }
 
-  async handleProfile(req: Request) {
-    const body = await this.parse(req);
-    return await lastValueFrom(this.userGrpcService.getProfile({ token: body.token }));
+  async handleProfile(req: TokenRequest) {
+    return await lastValueFrom(this.userGrpcService.getProfile({ token: req.token }));
   }
 
   async handleAddVang(req: Request) {

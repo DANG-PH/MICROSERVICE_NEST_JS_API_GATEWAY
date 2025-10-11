@@ -1,3 +1,6 @@
+import { IsString, IsNotEmpty, MinLength } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger'
+
 export class Empty {}
 
 export class User {
@@ -22,10 +25,15 @@ export class User {
 }
 
 export class RegisterRequest {
-  constructor(
-    public username: string,
-    public password: string,
-  ) {}
+  @ApiProperty({ example: 'dang123', description: 'Tên đăng nhập' }) // của swagger
+  @IsString() // của validate
+  @IsNotEmpty({ message: 'Username không được để trống' }) // của validate
+  username: string;
+
+  @ApiProperty({ example: '123456', description: 'Mật khẩu đăng nhập' })
+  @IsString()
+  @MinLength(6, { message: 'Mật khẩu phải có ít nhất 6 ký tự' })
+  password: string;
 }
 
 export class RegisterResponse {
@@ -33,10 +41,15 @@ export class RegisterResponse {
 }
 
 export class LoginRequest {
-  constructor(
-    public username: string,
-    public password: string,
-  ) {}
+  @ApiProperty({ example: 'dang123', description: 'Tên đăng nhập' }) // của swagger
+  @IsString() // của validate
+  @IsNotEmpty({ message: 'Username không được để trống' }) // của validate
+  username: string;
+
+  @ApiProperty({ example: '123456', description: 'Mật khẩu đăng nhập' })
+  @IsString()
+  @MinLength(6, { message: 'Mật khẩu phải có ít nhất 6 ký tự' })
+  password: string;
 }
 
 export class LoginResponse {
@@ -44,7 +57,10 @@ export class LoginResponse {
 }
 
 export class TokenRequest {
-  constructor(public token: string) {}
+  @ApiProperty({ example: 'token', description: 'Token get data' })
+  @IsString()
+  @IsNotEmpty({ message: 'Token không được để trống' })
+  token: string
 }
 
 export class GetUserRequest {

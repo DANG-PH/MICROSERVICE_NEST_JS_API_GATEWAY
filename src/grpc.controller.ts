@@ -1,7 +1,8 @@
-import { Controller, Post, Body } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBody } from '@nestjs/swagger';
+import { Controller, Post, Body, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBody,ApiBearerAuth } from '@nestjs/swagger';
 import { AppService } from './app.service';
-import { RegisterRequest } from 'dto/grpc.dto';
+import { LoginRequest, RegisterRequest,TokenRequest } from 'dto/grpc.dto';
+import { JwtAuthGuard } from './jwt-auth.guard';
 
 @Controller('user/grpc')
 @ApiTags('Api User') 
@@ -18,13 +19,17 @@ export class GrpcController {
 
   @Post('login')
   @ApiOperation({ summary: 'Đăng nhập tài khoản user (qua gRPC)' })
-  async login(@Body() body: any) {
+  @ApiBody({ type:  LoginRequest })
+  async login(@Body() body: LoginRequest) {
+    console.log('✅ Body nhận được từ Swagger:', body);
     return this.appService.handleLogin(body);
   }
 
   @Post('profile')
   @ApiOperation({ summary: 'Lấy thông tin user (qua gRPC)' })
-  async profile(@Body() body: any) {
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  async profile(@Body() body: TokenRequest) {
     return this.appService.handleProfile(body);
   }
 

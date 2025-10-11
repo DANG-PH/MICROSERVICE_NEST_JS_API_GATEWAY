@@ -6,6 +6,8 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { join } from 'path';
 import { USER_PACKAGE_NAME } from 'proto/user.pb';
 import { AppService } from './app.service';
+import { JwtStrategy } from './jwt.strategy';
+import { JwtAuthGuard } from './jwt-auth.guard';
 
 @Module({
   imports: [
@@ -23,6 +25,6 @@ import { AppService } from './app.service';
     ]),
   ],
   controllers: [GrpcController],
-  providers: [AppService]
+  providers: [AppService,JwtStrategy]
 })
 export class AppModule {}
