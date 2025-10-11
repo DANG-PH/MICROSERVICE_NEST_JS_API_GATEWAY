@@ -1,0 +1,146 @@
+syntax = "proto3";
+
+package user;
+
+// ===== SERVICE DEFINITION =====
+service UserService {
+  rpc Register (RegisterRequest) returns (RegisterResponse) {};
+  rpc Login (LoginRequest) returns (LoginResponse) {};
+  rpc GetProfile (TokenRequest) returns (UserResponse) {};
+  rpc SaveGame (SaveGameRequest) returns (SaveGameResponse) {};
+  rpc GetUser (GetUserRequest) returns (UserResponse) {};
+  rpc GetBalance (UsernameRequest) returns (BalanceResponse) {};
+  rpc UseVangNapTuWeb (UseBalanceRequest) returns (BalanceResponse) {};
+  rpc UseNgocNapTuWeb (UseBalanceRequest) returns (BalanceResponse) {};
+  rpc UpdateBalance (UpdateBalanceRequest) returns (BalanceResponse) {};
+  rpc AddVangNapTuWeb (AddBalanceRequest) returns (BalanceResponse) {};
+  rpc AddNgocNapTuWeb (AddBalanceRequest) returns (BalanceResponse) {};
+  rpc GetTop10BySucManh (Empty) returns (UserListResponse) {};
+  rpc GetTop10ByVang (Empty) returns (UserListResponse) {};
+  rpc AddItemWeb (AddItemRequest) returns (MessageResponse) {};
+  rpc GetItemsWeb (UsernameRequest) returns (ItemListResponse) {};
+  rpc UseItemWeb (UseItemRequest) returns (MessageResponse) {};
+  rpc BanUser (BanUserRequest) returns (MessageResponse) {};
+  rpc UnbanUser (BanUserRequest) returns (MessageResponse) {};
+  rpc UpdateRole (UpdateRoleRequest) returns (MessageResponse) {};
+}
+
+// ===== MESSAGES =====
+
+message Empty {}
+
+message User {
+  int32 id = 1;
+  string username = 2;
+  string password = 3;
+  string role = 4;
+  bool biBan = 5;
+  int64 vang = 6;
+  int64 ngoc = 7;
+  int64 sucManh = 8;
+  int64 vangNapTuWeb = 9;
+  int64 ngocNapTuWeb = 10;
+  int32 x = 11;
+  int32 y = 12;
+  string mapHienTai = 13;
+  bool daVaoTaiKhoanLanDau = 14;
+  bool coDeTu = 15;
+  repeated int32 danhSachVatPhamWeb = 16;
+}
+
+message RegisterRequest {
+  string username = 1;
+  string password = 2;
+}
+
+message RegisterResponse {
+  bool success = 1;
+}
+
+message LoginRequest {
+  string username = 1;
+  string password = 2;
+}
+
+message LoginResponse {
+  string access_token = 1;
+}
+
+message TokenRequest {
+  string token = 1;
+}
+
+message GetUserRequest {
+  string username = 1;
+}
+
+message UserResponse {
+  User user = 1;
+}
+
+message SaveGameRequest {
+  User user = 1;
+  int64 sucManhDeTu = 2;
+}
+
+message SaveGameResponse {
+  string message = 1;
+}
+
+message UsernameRequest {
+  string username = 1;
+}
+
+message BalanceResponse {
+  uint64 vangNapTuWeb = 1;
+  uint64 ngocNapTuWeb = 2;
+}
+
+message UseBalanceRequest {
+  string username = 1;
+  uint64 amount = 2;
+}
+
+message UpdateBalanceRequest {
+  string username = 1;
+  string type = 2;
+  int64 amount = 3;
+}
+
+message AddBalanceRequest {
+  string username = 1;
+  int64 amount = 2;
+}
+
+message UserListResponse {
+  repeated User users = 1;
+}
+
+message AddItemRequest {
+  string username = 1;
+  int32 itemId = 2;
+}
+
+message ItemListResponse {
+  repeated int32 itemIds = 1;
+}
+
+message UseItemRequest {
+  string username = 1;
+  int32 itemId = 2;
+}
+
+message BanUserRequest {
+  string username = 1;
+  string adminName = 2;
+}
+
+message UpdateRoleRequest {
+  string username = 1;
+  string newRole = 2;
+  string adminName = 3;
+}
+
+message MessageResponse {
+  string message = 1;
+}

@@ -1,22 +1,163 @@
-import { Controller, All, Req, HttpException, Logger } from '@nestjs/common';
+import { Controller, All, Req, HttpException, Logger ,Res} from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
-import type { Request } from 'express';
-import { lastValueFrom, timeout, catchError } from 'rxjs';
-import { throwError } from 'rxjs';
+import { Inject, OnModuleInit } from '@nestjs/common';
+import type { ClientGrpc } from '@nestjs/microservices';
+import type { Request , Response} from 'express';
+import { firstValueFrom, lastValueFrom } from 'rxjs';
 import getRawBody from 'raw-body';
+import { Observable } from 'rxjs';
+import { LoginResponse , LoginRequest, USER_PACKAGE_NAME, USER_SERVICE_NAME, TokenRequest, UserResponse, BalanceResponse, AddBalanceRequest, UseItemRequest, MessageResponse, UserServiceClient, UserServiceController} from 'proto/user.pb';
 
 @Controller()
-export class AppController {
+export class AppController implements OnModuleInit {
   private readonly logger = new Logger(AppController.name);
+  private userGrpcService: UserServiceClient;
 
-  constructor(private readonly http: HttpService) {}
+  constructor(
+    private readonly http: HttpService,
+    @Inject(USER_PACKAGE_NAME) private readonly client: ClientGrpc,
+  ) {}
+
+  onModuleInit() {
+    this.userGrpcService = this.client.getService(USER_SERVICE_NAME);
+  }
 
   @All('*')
-  async proxy(@Req() req: Request) {
+  async proxy(@Req() req: Request, @Res() res: Response) {
     const url = this.routeToService(req.path);
 
-    console.log('➡️ Forward:', req.method, req.url, req.body);
+    // Nếu route dành cho user thì gọi gRPC thay vì HTTP
+    if (req.path.startsWith('/user/grpc/register')) {
+      const raw = await getRawBody(req);
+      const body = JSON.parse(raw.toString());
+      const result = await firstValueFrom(
+        this.userGrpcService.register({
+          username : body.username,
+          password : body.password
+        })
+      ) 
+      const json = JSON.parse(JSON.stringify(result));
 
+      return res.json(json);
+    }
+    if (req.path.startsWith('/user/grpc/login')) {
+      const raw = await getRawBody(req);
+      const body = JSON.parse(raw.toString());
+      console.log('📥 Nhận login:', body);
+
+      try { 
+        const result = await lastValueFrom(
+          this.userGrpcService.login({
+            username: body.username,
+            password: body.password,
+          }),
+        );
+
+        console.log('✅ Raw result:', result);
+        const json = JSON.parse(JSON.stringify(result));
+        console.log('✅ Gửi trả client (JSON):', json);
+
+        return res.json(json);
+      } catch (err) {
+        console.error('❌ Lỗi khi gọi gRPC Login:', err);
+        return res.status(500).json({ message: 'Internal server error' });
+      }
+    }
+    if (req.path.startsWith('/user/grpc/profile')) {
+      const raw = await getRawBody(req);
+      const body = JSON.parse(raw.toString());
+      const result = await lastValueFrom(
+        this.userGrpcService.getProfile({
+          token : body.token
+        }),
+      );
+
+      const json = JSON.parse(JSON.stringify(result));
+
+      return res.json(json);
+    }
+
+    if (req.path.startsWith('/user/grpc/addVangNapTuWeb')) {
+      const raw = await getRawBody(req);
+      const body = JSON.parse(raw.toString());
+      const result = await firstValueFrom(
+        this.userGrpcService.addVangNapTuWeb({
+          username : body.username,
+          amount : body.amount
+        })
+      ) 
+      const json = JSON.parse(JSON.stringify(result));
+
+      return res.json(json);
+    }
+    if (req.path.startsWith('/user/grpc/addNgocNapTuWeb')) {
+      const raw = await getRawBody(req);
+      const body = JSON.parse(raw.toString());
+      const result = await firstValueFrom(
+        this.userGrpcService.addNgocNapTuWeb({
+          username : body.username,
+          amount : body.amount
+        })
+      ) 
+      const json = JSON.parse(JSON.stringify(result));
+
+      return res.json(json);
+    }
+    if (req.path.startsWith('/user/grpc/addItemWeb')) {
+      const raw = await getRawBody(req);
+      const body = JSON.parse(raw.toString());
+      const result = await firstValueFrom(
+        this.userGrpcService.addItemWeb({
+          username : body.username,
+          itemId : body.itemId
+        })
+      ) 
+      const json = JSON.parse(JSON.stringify(result));
+
+      return res.json(json);
+    }
+    if (req.path.startsWith('/user/grpc/getItemWeb')) {
+      const raw = await getRawBody(req);
+      const body = JSON.parse(raw.toString());
+      const result = await firstValueFrom(
+        this.userGrpcService.getItemsWeb({
+          username : body.username,
+        })
+      ) 
+      const json = JSON.parse(JSON.stringify(result));
+
+      return res.json(json);
+    }
+    if (req.path.startsWith('/user/grpc/useItemWeb')) {
+      const raw = await getRawBody(req);
+      const body = JSON.parse(raw.toString());
+      const result = await firstValueFrom(
+        this.userGrpcService.useItemWeb({
+          username : body.username,
+          itemId : body.itemId
+        })
+      ) 
+      const json = JSON.parse(JSON.stringify(result));
+
+      return res.json(json);
+    }
+    if (req.path.startsWith('/user/grpc/getTop10BySucManh')) {
+      const result = await firstValueFrom(
+        this.userGrpcService.getTop10BySucManh({})
+      ) 
+      const json = JSON.parse(JSON.stringify(result));
+
+      return res.json(json);
+    }
+    if (req.path.startsWith('/user/grpc/getTop10ByVang')) {
+      const result = await firstValueFrom(
+        this.userGrpcService.getTop10ByVang({})
+      ) 
+      const json = JSON.parse(JSON.stringify(result));
+
+      return res.json(json);
+    }
+    // Ngược lại, chuyển tiếp HTTP như cũ
     if (!url) throw new HttpException('Service not found', 404);
 
     const fullUrl = `${url}${req.path}`;
@@ -29,7 +170,7 @@ export class AppController {
       url: fullUrl,
       data: rawBody,
       headers: req.headers,
-    })
+    });
 
     const result = await lastValueFrom(response);
     return result.data;
@@ -45,25 +186,8 @@ export class AppController {
 }
 
 
-// Ví dụ client gửi request:
-
-// POST http://localhost:3000/api/auth/login
-// Body: { "username": "dang", "password": "123" }
-// Headers: { "Content-Type": "application/json" }
-
-
-// Khi đến proxy():
-
-// req.method    // "POST"
-// req.path      // "/auth/login"
-// req.body      // { username: "dang", password: "123" }
-// req.headers   // { content-type: "application/json", ... }
-
-
-// Cú pháp	Dùng khi	Giải thích
-// import { X } from 'pkg'	X được dùng ở runtime	ví dụ: class, hàm, biến
-// import type { X } from 'pkg'	X chỉ dùng để định nghĩa kiểu	không tạo import thật khi biên dịch JS
-
-
-// ở đây chúng ta xài getRawBody để đọc buffer( dãy nhị phân đc mã hóa từ json client gửi ) từ steam
-// k dùng bodyParser để đọc vì k có cơ chế await để đọc đủ data gửi đi, còn bodyParser mà true thì nó cũng đọc từ steam nhưng k có await nên thiếu dữ liệu và dữ liệu cần mã hóa lại khi gửi cho service khác còn raw buffer thì ko cần vì đã mã hóa 1 lần lúc client gửi cho api gate way rồi cứ thế gửi đi cho service khác
+// NestJS lifecycle	LibGDX lifecycle
+// constructor()	new MyGame() (chưa có gì render được)
+// onModuleInit()	show() (chuẩn bị tài nguyên, khởi tạo đối tượng)
+// onApplicationBootstrap()	render() bắt đầu vòng lặp game
+// onModuleDestroy()	dispose() giải phóng tài nguyên
