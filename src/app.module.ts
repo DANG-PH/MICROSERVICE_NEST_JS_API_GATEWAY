@@ -1,9 +1,11 @@
 import { Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
 import { AppController } from './app.controller';
+import { GrpcController } from './grpc.controller';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { join } from 'path';
 import { USER_PACKAGE_NAME } from 'proto/user.pb';
+import { AppService } from './app.service';
 
 @Module({
   imports: [
@@ -20,6 +22,7 @@ import { USER_PACKAGE_NAME } from 'proto/user.pb';
       },
     ]),
   ],
-  controllers: [AppController],
+  controllers: [GrpcController],
+  providers: [AppService]
 })
 export class AppModule {}
