@@ -3,12 +3,16 @@ import { AppModule } from './app.module';
 import * as bodyParser from 'body-parser';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
+import { winstonLogger } from './logger.config';
+import { LoggingInterceptor } from './logging.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     bodyParser: true, // 🚫 tắt auto parse body (cho proxy)
+    logger: winstonLogger, // ⚡ Dùng Winston làm logger mặc định
   });
 
+  app.useGlobalInterceptors(new LoggingInterceptor());
   // ✅ Cấu hình Swagger
   const config = new DocumentBuilder()
     .setTitle('API Gateway')

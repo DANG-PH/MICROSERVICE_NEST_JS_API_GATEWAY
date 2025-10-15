@@ -26,8 +26,8 @@ export class User {
 
 export class RegisterRequest {
   @ApiProperty({ example: 'dang123', description: 'Tên đăng nhập' }) // của swagger
-  @IsString() // của validate
-  @IsNotEmpty({ message: 'Username không được để trống' }) // của validate
+  @IsString() // của validator
+  @IsNotEmpty({ message: 'Username không được để trống' }) // của validator
   username: string;
 
   @ApiProperty({ example: '123456', description: 'Mật khẩu đăng nhập' })

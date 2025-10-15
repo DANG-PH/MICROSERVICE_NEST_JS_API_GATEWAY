@@ -32,7 +32,15 @@ export class AppService {
   }
 
   async handleLogin(req: LoginRequest) {
-    return await lastValueFrom(this.userGrpcService.login(req));
+    this.logger.log('🔹 Đang xử lý đăng nhập cho user: ' + req.username);
+    try {
+      const res = await lastValueFrom(this.userGrpcService.login(req));
+      this.logger.log(`✅ Đăng nhập thành công: ${req.username}`);
+      return res;
+    } catch (err) {
+      this.logger.error(`❌ Đăng nhập thất bại: ${req.username}`, err.stack);
+      throw err;
+    }
   }
 
   async handleProfile(req: TokenRequest) {
